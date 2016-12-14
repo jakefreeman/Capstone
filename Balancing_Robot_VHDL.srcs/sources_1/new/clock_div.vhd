@@ -32,34 +32,39 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity clock_div is
-	Generic(
-	divisor : integer = 50; --number to divide clock by 
-	cnt_length : integer = 6; --length of counter to allow for counting to divisor
+	generic (
+	divisor : integer := 50; --number to divide clock by 
+	cnt_length : integer := 6 --length of counter to allow for counting to divisor
 	);
-  Port ( 
+  port ( 
 		clk : in STD_LOGIC; -- Clock unput
     rst : in STD_LOGIC; --Synchronous reset
-    clk_div : out STD_LOGIC); -- Divided Clock output
+    div_clk : out STD_LOGIC); -- Divided Clock output
 end clock_div;
 
 architecture Behavioral of clock_div is
 
-signal count : unsigned(cnt_length-1 downto 0) := (others -> '0');
-signal i_div_clk : STD_LOGIC := 0;
+signal count : unsigned(cnt_length-1 downto 0) := (others => '0');
+signal i_div_clk : STD_LOGIC := '0';
+
 
 begin
 
-	process(clk,rst) begin
+	process (clk) begin
 		if rising_edge(clk) then
 			if (rst='1') then
-				count <= '0';
-				i_div_clk <= (others -> '0');
+				count <= (others => '0');
+				i_div_clk <= '0';
 			elsif (count = divisor) then
-				count <= (others -> '0');
+				count <= (others => '0');
 				i_div_clk <= not i_div_clk;
 			else
-				count <= count <= count + '1';
+				count <= count + 1;
 				i_div_clk <= i_div_clk;
 			end if;
 		end if;
+	end process;
+
+div_clk <= i_div_clk;		
+
 end Behavioral;
