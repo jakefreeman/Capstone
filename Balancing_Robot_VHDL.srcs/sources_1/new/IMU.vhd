@@ -33,13 +33,14 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity IMU is
     Port ( 
+			rst				: in STD_LOGIC; --Synchronous reset
 			clk 			: in STD_LOGIC; --100 MHz
       n_cs 			: in STD_LOGIC; --Active low chip select
       sdi 			: in STD_LOGIC; --Serial data in from IMU
       int_in 		: in STD_LOGIC; --interupt from IMU
 			data_rdy 	: in STD_LOGIC; --angle out has been calculated and is ready
       sdo 			: out STD_LOGIC; --Serial data out to IMU
-			angle_out : out STD_LOGIC_VECTOR (15 downto 0); --16-bit angle value
+			angle_out : out signed (15 downto 0); --16-bit angle value
       sclk 			: out STD_LOGIC --1Mhz
 			);
 end IMU;
