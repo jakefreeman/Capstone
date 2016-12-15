@@ -1,5 +1,10 @@
-*
-*/
-!.gitignore
-!/Balancing_Robot_VHDL.srcs
+/Balancing_Robot_VHDL.cache
+/Balancing_Robot_VHDL.hw
+/Balancing_Robot_VHDL.sim
+/vivado-boards-master
+Balancing_Robot_VHDL.xpr
+Nexys4_Master.ucf
+nexys4_rm.pdf
+nexys4_sch.pdf
+
 
