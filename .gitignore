@@ -1,4 +1,5 @@
-/Balancing_Robot_VHDL.cache
-/Balancing_Robot_VHDL.hw
-/Balancing_Robot_VHDL.xpr
-/Balancing_Robot_VHDL.sim
+*
+/*
+!.gitignore
+!/Balancing_Robot_VHDL.srcs
+
