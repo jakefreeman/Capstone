@@ -31,9 +31,6 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity IMU_tb is
-	Port (
-	angle : out STD_LOGIC_VECTOR(15 downto 0)
-	);
 end IMU_tb;
 
 architecture Behavioral of IMU_tb is
@@ -44,6 +41,10 @@ component IMU is
 			cnt_length : integer --2^whatever is needed to count to divisor
 		);
     port ( 
+			switch0		: in STD_LOGIC; --accel sensitivy setting switch
+			switch1		: in STD_LOGIC; --accel sensitivy setting switch
+			switch2		: in STD_LOGIC; --gyro sensitivy setting switch
+			switch3		: in STD_LOGIC; --gyro sensitivy setting switch
 			rst				: in STD_LOGIC; --Synchronous reset
 			clk 			: in STD_LOGIC; --100 MHz
       n_cs 			: in STD_LOGIC; --Active low chip select
@@ -56,6 +57,10 @@ component IMU is
 			);
 end component;
 
+signal sw0				: STD_LOGIC :='1';
+signal sw1				: STD_LOGIC :='0';
+signal sw2				: STD_LOGIC :='1';
+signal sw3				: STD_LOGIC :='0';
 signal reset 			: STD_LOGIC :='0';
 signal clock 			: STD_LOGIC :='0';
 signal chip_select: STD_LOGIC :='0';
@@ -76,6 +81,10 @@ generic map(
 	cnt_length => cnt_length
 	)
 port map(
+	switch0 	=> sw0,
+	switch1 	=> sw1,
+	switch2 	=> sw2,
+	switch3 	=> sw3,
 	rst				=> reset, 			
   clk 			=> clock, 			
   n_cs 			=> chip_select,

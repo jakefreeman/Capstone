@@ -54,21 +54,6 @@ end IMU;
 
 architecture Behavioral of IMU is
 
--- Componet Declarations
-component clock_div is
-	generic(
-		divisor 		: integer;
-		cnt_length 	: integer
-		);
-	port(
-		clk 		: in STD_LOGIC; -- Clock unput
-    rst 		: in STD_LOGIC; --Synchronous reset
-    div_clk : out STD_LOGIC -- Divided Clock output
-	);
-end component;
-
-
-
 ------------------- Signal Declarationws---------------------
 
 -- IMU register value signals
@@ -85,44 +70,178 @@ signal count			: unsigned(23 downto 0) := (others => '0'); -- 24-bit counter sig
 signal count_en		: STD_LOGIC := '0'; --counter enable
 signal count_rst 	: STD_LOGIC := '0'; --counter reset
 
---State Signals -  nested state machine
-signal state			: STD_LOGIC_VECTOR(7 downto 0);
-signal next_state : STD_LOGIC_VECTOR(7 downto 0);
+--State Signals - one-hot encoded
+signal state			: STD_LOGIC_VECTOR(7 downto 0) := "00000001";
+signal next_state : STD_LOGIC_VECTOR(7 downto 0) := "00000001";
+
+--Other internal signal
+signal i_n_cs : STD_LOGIC := '1'; --active low chip select
+signal i_sdo	: STD_LOGIC := '0'; --serial out to IMU
+signal i_sclk	: STD_LOGIC := '1'; --serial clock to IMU
 
 
 begin
 
+i_n_cs <= '1';
 reg28(4 downto 3) <= switch0 & switch1;
 reg27(4 downto 3) <= switch2 & switch3;
 
--- Clock divider port map
-CLK_DIV: clock_div
-	generic map (
-		divisor 		=> divisor,
-		cnt_length 	=> cnt_length
-	 )
-	port map (
-		clk 		=> clk,
-		rst 		=> rst,
-		div_clk => div_clk
-		);
-
-	counter:process(clk, rst, count_rst) begin
-		if (rst='1') then
-			count <= 0;
-		elsif (count_rst = '1') then
-			count <= 0;
-		elsif (count_en = '1') then
-			count <= count + 1;
-		else
-			count <= count;
+	counter:process(clk, rst, count_rst,count_en) begin
+	  if rising_edge(clk) then
+			if (rst='1') then
+				count <= x"000000";
+			elsif (count_rst = '1') then
+				count <= x"000000";
+			elsif (count_en = '1') then
+				count <= count + 1;
+			else
+				count <= count;
+			end if;
 		end if;
 	end process;
 	
-	SM:process(state, int, count) begin
-		if (state=")
+	IMU_SM:process(state, int_in, count) begin
+		if (state="00000001") then
+			count_en <= '1';
+			i_n_cs <= '1';
+			if (count = x"00000F") then -- change 
+				next_state <= "00000010"; --counts for 100ms
+				count_rst <= '1';
+			else
+				next_state <= "00000001";
+				count_rst <= '0';
+			end if;
+		elsif (state="00000010") then
+			count_en <= '1';
+			if (count < x"0000C8") then
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= i_sclk;
+				i_sdo <= i_sdo;
+			elsif (count = x"000C8") then --first falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(7);
+			elsif (count = x"000190") then --first rising edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"000258") then --next falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(6);
+			elsif (count = x"000320") then --next rising edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"0003E8") then --next falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(5);
+			elsif (count = x"000480") then --next rising edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"000578") then --next falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(4);
+			elsif (count = x"000640") then --next rising edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"000708") then --next falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(3);
+			elsif (count = x"0007D0") then --first rising edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"000898") then --next falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(2);
+			elsif (count = x"000960") then --next rising edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"A28") then --next falling edge of sclk
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(1);
+			elsif (count = x"000AF0") then
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count =x"000BB8") then 
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '0';
+				i_sdo <= reg107(0);
+			elsif (count = x"000C80") then 
+				next_state <= state;
+				count_rst <= '0';
+				i_n_cs <= '0';
+				i_sclk <= '1';
+				i_sdo <= i_sdo;
+			elsif (count = x"000D48") then
+				next_state <= "00000100";
+				count_rst <= '1';
+				i_n_cs <= '1';
+				i_sclk <= i_sclk;
+				i_sdo <= i_sdo;
+			else
+				next_state <= "00000010"; -- Change Later
+				i_n_cs <= '0';
+				i_sclk <= i_sclk;
+				i_sdo <= i_sdo;
+			end if;
+		end if;
+					
 	end process;
 	
-	sclk <= div_clk; -- 1MHz serial clock from clock_div component
+	SM_REGISTER:process(clk) begin
+		if rising_edge(clk) then
+			if (rst = '1') then
+				state <= "00000001";
+			else
+				state <= next_state;
+			end if;
+		end if;
+	end process;
+	
+	sclk <= i_sclk; -- 1MHz serial clock from clock_div component
+	sdo <= i_sdo; --Serial out to IMU
 	
 end Behavioral;
