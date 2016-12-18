@@ -6,7 +6,7 @@
 Balancing_Robot_VHDL.xpr
 nexys4_rm.pdf
 nexys4_sch.pdf
-*.wcft
+*.wcfg
 *.wlf
 
 

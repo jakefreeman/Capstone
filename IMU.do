@@ -1,10 +1,10 @@
+
 vlib work 
 
 ################################################################################
 ## Source Files
 ################################################################################
 vcom -reportprogress 300 -work work Balancing_Robot_VHDL.srcs/sources_1/new/IMU.vhd
-vcom -reportprogress 300 -work work Balancing_Robot_VHDL.srcs/sources_1/new/clock_div.vhd
 ###############################################################################
 # Testbench Files
 ###############################################################################
