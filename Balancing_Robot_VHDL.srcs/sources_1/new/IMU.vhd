@@ -79,11 +79,10 @@ signal count_en		: STD_LOGIC := '0'; --counter enable
 signal count_rst 	: STD_LOGIC := '0'; --counter reset
 
 --State Signals - one-hot encoded
+signal setup_flag	: STD_LOGIC := '1';
 signal state			: STD_LOGIC_VECTOR(7 downto 0) := "00000001";
 signal next_state : STD_LOGIC_VECTOR(7 downto 0) := "00000001";
-signal state_diff	: STD_LOGIC := '0';
-signal state0			: STD_LOGIC_VECTOR(7 downto 0) := "00000001";
-signal next_state0: STD_LOGIC_VECTOR(7 downto 0) := "00000001";
+signal state_count: unsigned(7 downto 0) := "00000000";
 signal state_id		: STD_LOGIC_VECTOR(7 downto 0) := "00000001";
 constant i_read		: STD_LOGIC_VECTOR(7 downto 0) := "00000010";
 constant i_write	: STD_LOGIC_VECTOR(7 downto 0) := "00000100";
@@ -92,8 +91,8 @@ constant i_wait		: STD_LOGIC_VECTOR(7 downto 0) := "00001000";
 
 --Other internal signal
 signal i_data 	: STD_LOGIC_VECTOR(7 downto 0) := "00000000"; --address/reg value to be sent to IMU. Updates every write/read cycle
-signal i_accel	: STD_LOGIC_VECTOR(7 downto 0) := "00000000"; --accelerometer data
-signal i_gyro		: STD_LOGIC_VECTOR(7 downto 0) := "00000000"; --gyroscope data
+signal i_accel	: STD_LOGIC_VECTOR(15 downto 0) := (others => '0'); --accelerometer data
+signal i_gyro		: STD_LOGIC_VECTOR(15 downto 0) := (others => '0'); --gyroscope data
 signal i_IMU_in	: STD_LOGIC_VECTOR(7 downto 0) := "00000000"; --data from IMU, accel or gryo data
 signal i_rd_wr	: STD_LOGIC := '0'; --read(1)/write(0) signal
 signal i_n_cs 	: STD_LOGIC := '1'; --active low chip select
@@ -330,9 +329,24 @@ reg28(4 downto 3) <= switch0 & switch1;
 				count_rst <= '0';
 				i_sclk <= i_sclk;
 				i_IMU_in <= i_IMU_in;
-			end if;			
+			end if;		
+		elsif (state = "00001000") then -- waiting for data
+			count_en <= '0';
+			count_rst <= '1';
+			i_n_cs <= '1';
+			i_sclk <= i_sclk;
+			i_IMU_in <= i_IMU_in;
+			i_sdo <= i_sdo;
+			if (int_in = '1') then
+				next_state <= "00000010"; -- change later
+			else
+				next_state <= state;
+			end if;
 		end if;
 					
+	end process;
+	
+	process (state_count) begin
 	end process;
 	
 	
@@ -344,9 +358,9 @@ reg28(4 downto 3) <= switch0 & switch1;
 				state <= next_state;
 			end if;
 			if (state /= next_state) then
-				state_diff <= '1';
+				state_count <= state_count + 1;
 			else
-				state_diff <= '0';
+				state_count <= state_count;
 			end if;
 		end if;
 	end process;

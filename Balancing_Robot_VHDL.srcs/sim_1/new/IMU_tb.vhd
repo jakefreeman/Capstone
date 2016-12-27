@@ -106,6 +106,10 @@ process begin
 	reset <= '1';
 	wait for 20 ns;
 	reset <= '0';
+	wait for 27000 ns;
+	int_in <= '1';
+	wait for 10 ns;
+	int_in <= '0';
 	wait;
 	
 end process;
