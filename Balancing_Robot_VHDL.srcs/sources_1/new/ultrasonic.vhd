@@ -10,12 +10,16 @@
 -- Tool Versions: 
 -- Description: Reads generic HC-SR04 ultrasonic sensors. Designed for 100MHz clock
 -- Output is distance in centimeters 9-bit value range from 2 to 400 cm
+
 -- Dependencies: 100 MHz clock
 -- 
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+-- trigger length: 10us = x"00 03E8"
+-- max time before expected echo return: 23.2ms = x"‭236680"
+-- max echo return high-time: 11.76ms = x"11F396"
+-- sensor refresh period: 60 ms = x"‭5B8D80‬"
 ----------------------------------------------------------------------------------
 
 
@@ -42,12 +46,14 @@ architecture Behavioral of ultrasonic is
 signal i_count : unsigned(23 downto 0) := (others => '0'); --counts to 60ms, or 6 million clock cycles
 --10us : x"00 03E8"
 --60ms : x"‭5B 8D80‬"
-signal i_trigger_out : STD_LOGIC := '0'; --internal trigger signal
-signal i_edge0 : STD_LOGIC := '0'; --edge detector
-signal i_edge1 : STD_LOGIC := '0'; --edge detector
-signal i_rise	 : unsigned(23 downto 0) := x"FFFFFF"; --count when echo return signal goes high
-signal i_time  : unsigned(23 downto 0) := x"000000"; --time returned signal is high in clock cycles
-signal i_distance: unsigned(47 downto 0);
+signal i_trigger_out 	: STD_LOGIC := '0'; --internal trigger signal
+signal i_edge0 				: STD_LOGIC := '0'; --edge detector
+signal i_edge1 				: STD_LOGIC := '0'; --edge detector
+signal i_edge_enable	: STD_LOGIC := '0'; --edge detect enable
+signal i_rise	 				: unsigned(23 downto 0) := x"FFFFFF"; --count when echo return signal goes high
+signal i_time  				: unsigned(23 downto 0) := x"000000"; --time returned signal is high in clock cycles
+signal i_distance 		: unsigned(47 downto 0);
+signal i_read_flag 		: STD_LOGIC := '0';
 
 begin
 
@@ -76,14 +82,29 @@ end process;
 get_distance: process(clk,rst) begin
 	if rising_edge(clk) then
 		i_edge0 <= i_edge1;
-		i_edge1 <= sensor_in;
-		elsif (i_edge0 = '0' and i_edge1 = '1') then
+		i_edge1 <= sensor_in and i_edge_enable;
+		if (rst = '1') then 
+			i_read_flag <= '0';
+			i_time <= (others => '0');
+			i_edge0 <= '0';
+			i_edge1 <= '0';
+			i_edge_enable <= '1';
+			i_rise <= (others => '0');
+		end if;			
+		if (i_edge0 = '0' and i_edge1 = '1') then
 			i_rise <= i_count;
+			i_read_flag <= '1';
 		else
 			i_rise <= i_rise;
 		end if;
 		if (i_edge0 = '1' and i_edge1 = '0') then 
 			i_time <= i_count - i_rise;
+		elsif (i_count = x"236A68" and i_read_flag = '0') then
+			i_time <= x"23E72D";
+			i_edge_enable <= '0';
+		elsif (i_count = x"5B8D80") then
+			i_read_flag <= '0';
+			i_edge_enable <= '1';
 		else
 			i_time <= i_time;
 		end if;

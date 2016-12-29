@@ -74,7 +74,7 @@ process begin
 	reset <= '0';
 	wait for 11 us;
 	s_in	<= '1';
-	wait for 23529 us;
+	wait for 20000 us;
 	s_in <= '0';
 	wait;
 end process;
