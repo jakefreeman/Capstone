@@ -11,7 +11,7 @@
 -- Description: Converts binary coded decimimal to 7-segment display code
 -- 
 -- Dependencies: Active low cathodes (1 is off, 0 is on), common annode display
--- 							Input is packed (4-bit) BCD
+-- 							Input is packed (4-bit) BCD. ALso includes characters P,I,and D
 -- 
 -- Revision:
 -- Revision 0.01 - File Created
@@ -55,9 +55,9 @@ segout  <=  "1000000" when din = "0000" else		  -- '0'
             "1111000" when din = "0111" else	    -- '7'
             "0000000" when din = "1000" else	    -- '8'
             "0011000" when din = "1001" else	    -- '9'
-            "1111111" when din = "1010" else
-            "1111111" when din = "1011" else
-            "1111111" when din = "1100" else
+            "0001100" when din = "1010" else			-- 'P'
+            "1001111" when din = "1011" else			-- 'I'
+            "0100001" when din = "1100" else			-- 'd'
             "1111111" when din = "1101" else
             "1111111" when din = "1110" else
             "1111111" when din = "1111";	--nothing is displayed when a number more than 9 is given as input.	
