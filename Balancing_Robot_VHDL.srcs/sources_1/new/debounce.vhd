@@ -21,11 +21,11 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 entity debounce is
 		Generic(
-			counter_size : INTEGER := 20; --length of counter 100MHz clock counts to 1 million (x"F240") cycles for 10 ms
+			counter_size : INTEGER := 20 --length of counter 100MHz clock counts to 1 million (x"F240") cycles for 10 ms
 			);
     Port( 
 			clk					: in STD_LOGIC; --clock
@@ -40,7 +40,7 @@ architecture Behavioral of debounce is
 signal ff0 					: STD_LOGIC;
 signal ff1 					: STD_LOGIC;
 signal count_reset	: STD_LOGIC;
-signal count 				: UNSIGNED(counter_size);
+signal count 				: unsigned(counter_size-1 downto 0) := (others => '0');
 
 begin
 
@@ -52,7 +52,7 @@ process(clk) begin
 		ff1 <= ff0;
 		if (count_reset = '1') then
 			count <= (others => '0');
-		elsif (count(counter_size) = '0');
+		elsif (count(counter_size-1) = '0') then
 			count <= count + 1;
 		else
 			button_out <= ff1;
