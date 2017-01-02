@@ -2,20 +2,20 @@
 -- 2ms counter
 library ieee; 
 use ieee.std_logic_1164.all;
-use IEEE.std_logic_unsigned.all;
+use IEEE.NUMERIC_STD.ALL;
         
 entity display_counter is   
     port(
         clk   : in  std_logic;
         rst   : in  std_logic;
-        count : out std_logic_vector(2 downto 0) :="000"
+        count : out unsigned(2 downto 0) :="000"
         );
 end;
 
 architecture synth of display_counter is
 
-signal q      : std_logic_vector(19 downto 0) := x"00000";		-- 3 bit counter
-signal q1     : std_logic_vector(2 downto 0) := "000";
+signal q      : unsigned(19 downto 0) := x"00000";		-- 3 bit counter
+signal q1     : unsigned(2 downto 0) := "000";
 begin
 
   process(clk, rst) begin

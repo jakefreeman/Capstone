@@ -9,7 +9,7 @@
 -- Target Devices: 
 -- Tool Versions: 
 -- Description: Converts unsigned value to packed BCD (4-bits per BCD value)
--- Generics describe input length and output length
+-- Generics describe input length and resulting decimal number length
 -- Dependencies: 
 -- 
 -- Revision:

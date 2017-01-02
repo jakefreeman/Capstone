@@ -41,15 +41,15 @@ end component;
 
 -- Signal Declarations
 signal clock : STD_LOGIC := '0';
-signal number : unsigned(6 downto 0);
-signal bcd		: STD_LOGIC_VECTOR(7 downto 0);
+signal number : unsigned(15 downto 0);
+signal bcd		: STD_LOGIC_VECTOR(15 downto 0);
 
 begin
 
 -- component instantiation
 to_bcd_UT: unsigned_to_bcd generic map(
-		input_length => 7,
-		number_digits => 2
+		input_length => 16,
+		number_digits => 4
 	)
 	port map(
 		value_in => number,
@@ -57,15 +57,15 @@ to_bcd_UT: unsigned_to_bcd generic map(
 	);
 	
 process begin
-	number <= "0000001";
+	number <= x"0064"; --100
 	wait for 20 ns;
-	number <= "0001111";
+	number <= x"01F4"; --500
 	wait for 20 ns;
-	number <= "0001001";
+	number <= x"03E8"; --1000
 	wait for 20 ns;
-	number <= "1100011";
+	number <= x"0D05"; --3333
 	wait for 20 ns;
-	number <= "0110010";
+	number <= x"270F"; --9999
 	wait;
 end process;
 
