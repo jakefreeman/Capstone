@@ -33,6 +33,7 @@ entity display_debounce_top is
 		clk 	: in STD_LOGIC;
 		btnU 	: in STD_LOGIC;
 		btnD 	: in STD_LOGIC;
+		CPU_RESET		: in STD_LOGIC;
 		an 		: out STD_LOGIC_VECTOR (7 downto 0);
 		seg 	: out STD_LOGIC_VECTOR (6 downto 0)
 	);
@@ -41,7 +42,7 @@ end display_debounce_top;
 architecture Behavioral of display_debounce_top is
 
 ---- Component Declarations ----
-component debouce is
+component debounce is
 	Generic(
 		counter_size : INTEGER --length of counter 100MHz clock counts to 1 million (x"F240") cycles for 10 ms
 	);
@@ -67,7 +68,7 @@ component display_counter is
   );
 end component;
 
-component unsinged_to_bcd is 
+component unsigned_to_bcd is 
 	Generic(
 		input_length : integer;
 		number_digits : integer
@@ -80,20 +81,20 @@ end component;
 
 
 ---- Signal Declarations ----
-signal i_button_up 	: STD_LOGIC;
-signal i_button_dn	: STD_LOGIC;
+signal i_button_up 			: STD_LOGIC := '0';
+signal i_button_up_prev : STD_LOGIC := '0';
+signal i_button_dn			: STD_LOGIC := '0';
+signal i_button_dn_prev : STD_LOGIC := '0';
 
-signal i_seg 				: STD_LOGIC_VECTOR(6 downto 0);
-signal i_bcd_single	: STD_LOGIC_VECTOR(3 downto 0);
+signal i_bcd_single	: STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
 
-signal i_reset			: STD_LOGIC := '0';
-signal i_dis_count	: STD_LOGIC_VECTOR(3 downto 0);
+signal i_dis_count	: unsigned(2 downto 0) := "000";
 
-signal i_count			: unsigned(13 downto 0); --max value = 9999
-signal i_bcd				: std_logic_vector(15 downto 0);
+signal i_count			: unsigned(13 downto 0) := (others => '0'); --max value = 9999
+signal i_bcd				: std_logic_vector(15 downto 0) := (others => '0');
 
-signal state				: std_logic_vector(1 downto 0);
-signal next_state		: std_logic_vector(1 downto 0);
+signal state				: std_logic_vector(1 downto 0) := (others => '0');
+signal next_state		: std_logic_vector(1 downto 0) := (others => '0');
 
 begin
 
@@ -121,19 +122,19 @@ debounce_dn: debounce
 sev_seg_1: seven_seg
 	port map(
 		din => i_bcd_single,
-		segout => i_seg
+		segout => seg
 	);
 
 display_counter_1: display_counter
 	port map(
 		clk => clk,
-		rst => i_reset,
+		rst => CPU_RESET,
 		count => i_dis_count
 	);
 	
 to_bcd_1: unsigned_to_bcd
 	generic map(
-		input_length => 13,
+		input_length => 14,
 		number_digits => 4
 	)
 	port map(
@@ -143,52 +144,30 @@ to_bcd_1: unsigned_to_bcd
 
 ---- Processes ----
 
---State Machine for button inputs
-process(i_button_up, i_button_dn) begin
-	if (state="00") then
-		if (i_button_up = '1') then
-			if (i_count = "1011100001111") then
-				i_count <= (others => '0');
-			else
-				i_count <= i_count + '1';
-			end if;
-		next_state <= "01";
-		elsif (i_button_dn = '1') then
-			if (i_count = "0000000000000") then
-				i_count <= "1011100001111";
-			else
-				i_count <= i_count - '1';
-			end if;
-		next_state <= "10";
-		end if;
-	elsif (state = "01") then
-		if (i_button_up = '0') then
-			next_state <= "00";
-		else
-			next_state <= "01";
-		end if;
-	elsif (state = "10") then 
-		if (i_button_dn = '0') then
-			next_state <= "00";
-		else
-			next_state <= "10";
-		end if;
-	else
-		next_state <= "00";
-	end if;
-end process;
-
--- State changer
-process(clk) begin
-	if rising_edge(clk) then
-		if i_reset = '1' then
-			state <= "00";
-		else
-			state <= next_state;
-		end if;
-	end if;
-end process;
 		
+process(clk, i_button_up, i_button_up_prev, i_button_dn, i_button_dn_prev) begin
+	if rising_edge(clk) then
+		i_button_up_prev <= i_button_up;
+		i_button_dn_prev <= i_button_dn;
+		if (i_button_up_prev = '0' and i_button_up = '1') then --rising edge detector
+		report "i_button_up rising edge";
+			if (i_count = "10011100001111") then 
+				i_count <= "00000000000000";
+			else 
+				i_count <= i_count + 1;
+			end if;
+		elsif (i_button_dn_prev = '0' and i_button_dn = '1') then --rising edge detector
+			report "i_button_dn rising edge";
+			if (i_count = "00000000000000") then 
+				i_count <= "10011100001111";
+			else 
+				i_count <= i_count - 1;
+			end if;
+		else
+			i_count <= i_count;
+		end if;
+	end if;
+end process;
 	
 
 ---- Top Level Connections ----	
@@ -199,17 +178,16 @@ i_bcd_single <= i_bcd(3 downto 0) when i_dis_count = "000" else -- selects digit
 								"0000" when i_dis_count = "100" else 
 								"0000" when i_dis_count = "101" else
 								"0000" when i_dis_count = "110" else 
-								"0000" when i_dis_count = "111";
+								"0000" when i_dis_count = "111" else "1111";
 								
-an <= "11111110" when d0 = "000" else -- Selects anode of 7-segment display
-      "11111101" when d0 = "001" else 
-      "11111011" when d0 = "010" else
-      "11110111" when d0 = "011" else
-      "11101111" when d0 = "100" else
-      "11011111" when d0 = "101" else
-      "10111111" when d0 = "110" else
-      "01111111" when d0 = "111";
+an <= "11111110" when i_dis_count = "000" else -- Selects anode of 7-segment display
+      "11111101" when i_dis_count = "001" else 
+      "11111011" when i_dis_count = "010" else
+      "11110111" when i_dis_count = "011" else
+      "11101111" when i_dis_count = "100" else
+      "11011111" when i_dis_count = "101" else
+      "10111111" when i_dis_count = "110" else
+      "01111111" when i_dis_count = "111" else "00000000";
 
-seg <= i_seg;
 
 end Behavioral;

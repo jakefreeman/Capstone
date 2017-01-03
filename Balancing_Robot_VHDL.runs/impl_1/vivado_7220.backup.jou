@@ -1,0 +1,10 @@
+#-----------------------------------------------------------
+# Vivado v2015.2 (64-bit)
+# SW Build 1266856 on Fri Jun 26 16:35:25 MDT 2015
+# IP Build 1264090 on Wed Jun 24 14:22:01 MDT 2015
+# Start of session at: Tue Jan 03 10:42:35 2017
+# Process ID: 12236
+# Log file: C:/Users/fvjak.LAPTOP-EVC94IFD/Dropbox/Capstsone/Balancing_Robot_VHDL/Balancing_Robot_VHDL.runs/impl_1/display_debounce_top.vdi
+# Journal file: C:/Users/fvjak.LAPTOP-EVC94IFD/Dropbox/Capstsone/Balancing_Robot_VHDL/Balancing_Robot_VHDL.runs/impl_1\vivado.jou
+#-----------------------------------------------------------
+source display_debounce_top.tcl -notrace

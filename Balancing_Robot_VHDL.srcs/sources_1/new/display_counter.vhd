@@ -21,11 +21,12 @@ begin
   process(clk, rst) begin
     if (rst = '1') then
         q <= (others => '0');
+				q1 <= "000";
     elsif rising_edge(clk) then 
-      q <= q + '1';				-- single quotes for single BITS In BINARY. Not sure if works for Dec.
+      q <= q + 1;				-- single quotes for single BITS In BINARY. Not sure if works for Dec.
       if (q = x"186A0") then		-- count to 100,000
         q <= (others => '0');
-        q1 <= (q1+'1');
+        q1 <= (q1+1);
 			end if;
     end if;
   end process;

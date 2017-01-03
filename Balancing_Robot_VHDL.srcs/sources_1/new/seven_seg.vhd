@@ -60,6 +60,6 @@ segout  <=  "1000000" when din = "0000" else		  -- '0'
             "0100001" when din = "1100" else			-- 'd'
             "1111111" when din = "1101" else
             "1111111" when din = "1110" else
-            "1111111" when din = "1111";	--nothing is displayed when a number more than 9 is given as input.	
+            "1111111" when din = "1111" else "1111111";	--nothing is displayed when a number more than 9 is given as input.	
 
 end Behavioral;
