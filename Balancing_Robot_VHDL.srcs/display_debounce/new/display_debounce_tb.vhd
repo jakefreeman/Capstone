@@ -33,9 +33,12 @@ component display_debounce_top is
 		clk 	: in STD_LOGIC;
 		btnU 	: in STD_LOGIC;
 		btnD 	: in STD_LOGIC;
+		btnC	: in STD_LOGIC;
+		echo	: in STD_LOGIC;
 		CPU_RESET		: in STD_LOGIC;
 		an 		: out STD_LOGIC_VECTOR (7 downto 0);
-		seg 	: out STD_LOGIC_VECTOR (6 downto 0)
+		seg 	: out STD_LOGIC_VECTOR (6 downto 0);
+		trigger		: out STD_LOGIC
 	);
 end component;
 
@@ -43,9 +46,12 @@ end component;
 signal clock 	: STD_LOGIC := '0';
 signal but_up : STD_LOGIC := '0';
 signal but_dn	: STD_LOGIC := '0';
+signal but_c	: STD_LOGIC := '0';
 signal anode 	: STD_LOGIC_VECTOR(7 downto 0);
 signal segment: STD_LOGIC_VECTOR(6 downto 0);
 signal reset	: STD_LOGIC := '0';
+signal echo		: STD_LOGIC := '0';
+signal trig		: STD_LOGIC := '0';
 
 begin
 
@@ -54,9 +60,12 @@ D_D_top_1: display_debounce_top port map(
 		clk 	=> clock, 	
 		btnU 	=> but_up, 
 	  btnD 	=> but_dn,
+		btnC	=> but_c,
 		CPU_RESET 	=> reset,
 	  an 		=> anode, 	
-		seg 	=> segment
+		seg 	=> segment,
+		trigger => trig,
+		echo => echo
 		);
 		
 process begin
@@ -65,18 +74,21 @@ process begin
 end process;
 	
 process begin
-	reset <= '1';
+	reset <= '0';
 	wait for 10 ns;
-	reset <= '0'; 
+	reset <= '1'; 
 	wait for 20 ns;
   but_up <= '1';
 	wait for 10 ns;
 	but_up <= '0';
 	wait for 10 ns;
 	but_up <= '1';
+	echo <= '1';
 	wait for 11 ms;
 	but_up <= '0';
-	wait for 10 ms;
+	wait for 9 ms;
+	echo <= '0';
+	wait for 1 ms;
 	but_dn <= '1';
 	wait for 10 ns;
 	but_dn <= '0';
@@ -86,9 +98,9 @@ process begin
 	but_dn <= '0';
 	wait for 10 ms;
 	wait for 10 ns;
-	reset <= '1';
-	wait for 10 ms;
 	reset <= '0';
+	wait for 10 ms;
+	reset <= '1';
 	wait for 10 ns;
 	but_dn <= '1';
 	wait for 10 ns;
@@ -98,6 +110,9 @@ process begin
 	wait for 11 ms;
 	but_dn <= '0';
 	wait for 10 ms;
+	but_c <= '1';
+	wait for 11 ms;
+	but_c <= '0';
 	wait;
 end process;
 

@@ -188,11 +188,11 @@ set_property PACKAGE_PIN M1 [get_ports {an[7]}]
 
 ##Buttons
 ##Bank = 15, Pin name = IO_L3P_T0_DQS_AD1P_15,				Sch name = CPU_RESET
-#set_property PACKAGE_PIN C12 [get_ports CPU_RESET]				
-	#set_property IOSTANDARD LVCMOS33 [get_ports CPU_RESET]
-##Bank = 15, Pin name = IO_L11N_T1_SRCC_15,					Sch name = BTNC
-set_property PACKAGE_PIN E16 [get_ports CPU_RESET]						
+set_property PACKAGE_PIN C12 [get_ports CPU_RESET]				
 	set_property IOSTANDARD LVCMOS33 [get_ports CPU_RESET]
+##Bank = 15, Pin name = IO_L11N_T1_SRCC_15,					Sch name = BTNC
+set_property PACKAGE_PIN E16 [get_ports btnC]						
+	set_property IOSTANDARD LVCMOS33 [get_ports btnC]
 ##Bank = 15, Pin name = IO_L14P_T2_SRCC_15,					Sch name = BTNU
 set_property PACKAGE_PIN F15 [get_ports btnU]						
 	set_property IOSTANDARD LVCMOS33 [get_ports btnU]
@@ -266,11 +266,11 @@ set_property PACKAGE_PIN V10 [get_ports btnD]
 
 ##Pmod Header JC
 ##Bank = 35, Pin name = IO_L23P_T3_35,						Sch name = JC1
-#set_property PACKAGE_PIN K2 [get_ports {JC[0]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {JC[0]}]
+set_property PACKAGE_PIN K2 [get_ports trigger]					
+	set_property IOSTANDARD LVCMOS33 [get_ports trigger]
 ##Bank = 35, Pin name = IO_L6P_T0_35,						Sch name = JC2
-#set_property PACKAGE_PIN E7 [get_ports {JC[1]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {JC[1]}]
+set_property PACKAGE_PIN E7 [get_ports echo]					
+	set_property IOSTANDARD LVCMOS33 [get_ports echo]
 ##Bank = 35, Pin name = IO_L22P_T3_35,						Sch name = JC3
 #set_property PACKAGE_PIN J3 [get_ports {JC[2]}]					
 	#set_property IOSTANDARD LVCMOS33 [get_ports {JC[2]}]
