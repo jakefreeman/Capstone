@@ -34,6 +34,8 @@ entity display_debounce_top is
 		btnU 	: in STD_LOGIC;
 		btnD 	: in STD_LOGIC;
 		btnC	: in STD_LOGIC;
+		btnL	: in STD_LOGIC;
+		btnR	: in STD_LOGIC;
 		echo 	: in STD_LOGIC;
 		CPU_RESET		: in STD_LOGIC;
 		an 		: out STD_LOGIC_VECTOR (7 downto 0);
@@ -92,6 +94,21 @@ component ultrasonic is
 	);
 end component;
 
+component display_blink is
+	Generic(
+		clk_freq : integer;
+		blnk_freq: integer;
+		count_res: integer
+	);
+	Port( 
+		clk 				: in STD_LOGIC;
+		reset				: in STD_LOGIC;
+		enable 			: in STD_LOGIC;
+		anode_in 		: in STD_LOGIC_VECTOR(2 downto 0);
+		an_blnk_sel : in STD_LOGIC_VECTOR(2 downto 0);
+		anode_out 	: out STD_LOGIC_VECTOR(7 downto 0)
+	);
+end component;
 
 ---- Signal Declarations ----
 signal i_button_up 			: STD_LOGIC := '0';
@@ -100,6 +117,10 @@ signal i_button_dn			: STD_LOGIC := '0';
 signal i_button_dn_prev : STD_LOGIC := '0';
 signal i_button_c				: STD_LOGIC := '0';
 signal i_button_c_prev 	: STD_LOGIC := '0';
+signal i_button_l				: STD_LOGIC := '0';
+signal i_button_l_prev 	: STD_LOGIC := '0';
+signal i_button_r				: STD_LOGIC := '0';
+signal i_button_r_prev 	: STD_LOGIC := '0';
 
 
 signal i_bcd_single			: STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
@@ -117,6 +138,9 @@ signal i_us_distance		: unsigned(8 downto 0) := (others => '0');
 
 signal state						: STD_LOGIC := '0';
 signal next_state				: STD_LOGIC := '0';
+
+signal i_blink_enable		: STD_LOGIC := '1';
+signal i_blink_select		: unsigned(2 downto 0);
 
 begin
 
@@ -149,6 +173,26 @@ debounce_c: debounce
 		clk 				=> clk,
 		button_in 	=> btnC,
 		button_out 	=> i_button_c
+	);
+	
+debounce_l: debounce 
+	generic map(
+		counter_size => 20
+	)
+	port map(
+		clk 				=> clk,
+		button_in 	=> btnL,
+		button_out 	=> i_button_l
+	);
+
+debounce_r: debounce 
+	generic map(
+		counter_size => 20
+	)
+	port map(
+		clk 				=> clk,
+		button_in 	=> btnR,
+		button_out 	=> i_button_r
 	);
 
 sev_seg_1: seven_seg
@@ -192,27 +236,66 @@ us_sensor_1: ultrasonic
 		trigger_out => i_us_trigger,
 		distance 		=> i_us_distance		
 	);
+	
+display_blink_1: display_blink
+	generic map(
+		clk_freq => 100000000,
+		blnk_freq=> 3,
+		count_res=> 25
+	)
+	Port Map(
+		clk 				=> clk,		
+	  reset				=> i_reset,	
+	  enable 			=> i_blink_enable,
+	  anode_in 		=> STD_LOGIC_VECTOR(i_dis_count),
+	  an_blnk_sel => STD_LOGIC_VECTOR(i_blink_select),
+	  anode_out 	=> an	
+	);
 
 ---- Processes ----
 
 		
-process(clk, i_button_up, i_button_up_prev, i_button_dn, i_button_dn_prev) begin
+process(clk, i_button_up, i_button_up_prev, i_button_dn, i_button_dn_prev, i_blink_select) begin
 	if rising_edge(clk) then
 		i_button_up_prev <= i_button_up;
 		i_button_dn_prev <= i_button_dn;
 		if (i_button_up_prev = '0' and i_button_up = '1') then --rising edge detector
-		report "i_button_up rising edge";
-			if (i_count = "10011100001111") then 
+		--report "i_button_up rising edge";
+			if (i_count >= "10011100001111") then 
 				i_count <= "00000000000000";
 			else 
-				i_count <= i_count + 1;
+				if (i_blink_select = "000") then
+				i_count <= 	i_count + 1;
+				elsif (i_blink_select = "001") then
+				i_count <= i_count + 10;
+				elsif (i_blink_select = "010") then
+				i_count <= i_count + 100;
+				elsif (i_blink_select = "011") then
+				i_count <= i_count + 1000;
+				elsif (i_blink_select = "100") then
+				i_count <= i_count;-- + 10000;
+				else
+				i_count <= i_count;-- + 100000;
+				end if;
 			end if;
 		elsif (i_button_dn_prev = '0' and i_button_dn = '1') then --rising edge detector
-			report "i_button_dn rising edge";
+			--report "i_button_dn rising edge";
 			if (i_count = "00000000000000") then 
 				i_count <= "10011100001111";
 			else 
-				i_count <= i_count - 1;
+				if (i_blink_select = "000") then
+				i_count <= 	i_count - 1;
+				elsif (i_blink_select = "001") then
+				i_count <= i_count - 10;
+				elsif (i_blink_select = "010") then
+				i_count <= i_count - 100;
+				elsif (i_blink_select = "011") then
+				i_count <= i_count - 1000;
+				elsif (i_blink_select = "100") then
+				i_count <= i_count;-- - 10000;
+				else
+				i_count <= i_count;-- - 100000;
+				end if;
 			end if;
 		else
 			i_count <= i_count;
@@ -223,6 +306,8 @@ end process;
 process(clk) begin
 	if rising_edge(clk) then
 			i_button_c_prev <= i_button_c;
+			i_button_l_prev <= i_button_l;
+			i_button_r_prev <= i_button_r;
 	end if;
 end process;
 
@@ -241,6 +326,21 @@ process(i_button_c,i_button_c_prev) begin
 			end if;
 		end if;
 end process;
+
+process(i_button_l,i_button_l_prev,i_button_r_prev,clk,i_reset) begin
+	if rising_edge(clk) then
+		if (i_reset='1') then
+			i_blink_select <= (others => '0');
+		elsif (i_button_l_prev = '0' and i_button_l = '1') then --rising edge detector
+			i_blink_select <= i_blink_select + 1;
+		elsif (i_button_r_prev = '0' and i_button_r = '1') then --rising edge detector
+			i_blink_select <= i_blink_select - 1;
+		else
+			i_blink_select <= i_blink_select;
+		end if;
+	end if;
+end process;
+
 
 process(clk, i_reset) begin
 	if rising_edge(clk) then
@@ -286,14 +386,6 @@ process (state, i_dis_count) begin
 end process;
 
 
-an <= "11111110" when i_dis_count = "000" else -- Selects anode of 7-segment display
-      "11111101" when i_dis_count = "001" else 
-      "11111011" when i_dis_count = "010" else
-      "11110111" when i_dis_count = "011" else
-      "11101111" when i_dis_count = "100" else
-      "11011111" when i_dis_count = "101" else
-      "10111111" when i_dis_count = "110" else
-      "01111111" when i_dis_count = "111" else "00000000";
 
 
 end Behavioral;

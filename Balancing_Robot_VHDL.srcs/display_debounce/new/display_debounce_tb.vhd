@@ -34,6 +34,8 @@ component display_debounce_top is
 		btnU 	: in STD_LOGIC;
 		btnD 	: in STD_LOGIC;
 		btnC	: in STD_LOGIC;
+		btnL	: in STD_LOGIC;
+		btnR	: in STD_LOGIC;
 		echo	: in STD_LOGIC;
 		CPU_RESET		: in STD_LOGIC;
 		an 		: out STD_LOGIC_VECTOR (7 downto 0);
@@ -47,6 +49,8 @@ signal clock 	: STD_LOGIC := '0';
 signal but_up : STD_LOGIC := '0';
 signal but_dn	: STD_LOGIC := '0';
 signal but_c	: STD_LOGIC := '0';
+signal but_l	: STD_LOGIC := '0';
+signal but_r	: STD_LOGIC := '0';
 signal anode 	: STD_LOGIC_VECTOR(7 downto 0);
 signal segment: STD_LOGIC_VECTOR(6 downto 0);
 signal reset	: STD_LOGIC := '0';
@@ -61,6 +65,8 @@ D_D_top_1: display_debounce_top port map(
 		btnU 	=> but_up, 
 	  btnD 	=> but_dn,
 		btnC	=> but_c,
+		btnR	=> but_r,
+		btnL	=> but_l,
 		CPU_RESET 	=> reset,
 	  an 		=> anode, 	
 		seg 	=> segment,
