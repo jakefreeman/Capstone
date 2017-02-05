@@ -280,7 +280,7 @@ process(clk, i_button_up, i_button_up_prev, i_button_dn, i_button_dn_prev, i_bli
 			end if;
 		elsif (i_button_dn_prev = '0' and i_button_dn = '1') then --rising edge detector
 			--report "i_button_dn rising edge";
-			if (i_count = "00000000000000") then 
+			if (i_count <= "00000000000000") then 
 				i_count <= "10011100001111";
 			else 
 				if (i_blink_select = "000") then

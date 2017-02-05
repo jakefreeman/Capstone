@@ -33,10 +33,10 @@ entity display_blink is
 		count_res: integer := 25
 	);
 	Port( 
-		clk 				: in STD_LOGIC;
-		reset				: in STD_LOGIC;
-		enable 			: in STD_LOGIC;
-		anode_in 		: in STD_LOGIC_VECTOR(2 downto 0);
+		clk 		: in STD_LOGIC;
+		reset		: in STD_LOGIC;
+		enable 		: in STD_LOGIC;
+		anode_in 	: in STD_LOGIC_VECTOR(2 downto 0);
 		an_blnk_sel : in STD_LOGIC_VECTOR(2 downto 0);
 		anode_out 	: out STD_LOGIC_VECTOR(7 downto 0)
 	);
@@ -49,7 +49,7 @@ constant i_count_max : integer := clk_freq/blnk_freq;
 
 signal i_count 			: unsigned(count_res- 1 downto 0) := (others => '0');
 signal i_blink 			: STD_LOGIC := '1';
-signal i_blink_array: STD_LOGIC_VECTOR(7 downto 0) := (others => '0'); 
+signal i_blink_array	: STD_LOGIC_VECTOR(7 downto 0) := (others => '0'); 
 signal i_anode 			: STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
 
 begin
@@ -58,17 +58,22 @@ process(clk,reset) begin
   if rising_edge(clk) then
 		if(reset = '1') then
 			i_count <= (others => '0');
-			i_blink <= '0';
+			i_blink <= '1';
 		elsif(i_count = i_count_max) then
-			i_blink <= not i_blink;
-			i_count <= (others => '0');
+			if(enable = '1') then
+				i_blink <= not i_blink;
+				i_count <= (others => '0');
+			else
+				i_blink <= '0';
+				i_count <= (others => '0');
+			end if;
 		else
 			i_count <= i_count + 1;
 		end if;
 	end if;
 end process;
 
-i_blink_array <= "00000000" when i_blink = '1' else "11111111";
+i_blink_array <= "00000000" when i_blink = '0' else "11111111";
 
 i_anode <= "11111110" when anode_in = "000" else 
            "11111101" when anode_in = "001" else 
