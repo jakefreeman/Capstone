@@ -659,7 +659,7 @@ process(clk, i_up, i_dn, state, i_blink_select, i_rst) begin
 		if (i_rst = '1') then
 			i_set_point <= "00" & x"2328";
 		else
-			if (state = "010") then
+			if (state = "110") then
 				if (i_up = '1') then
 					if (i_blink_select = "000") then
 						if (i_set_point >= 17999) then 
@@ -758,7 +758,7 @@ process(state, i_rst) begin
 	if (i_rst =  '1') then
 		i_blink_enable <= '0';
 	else
-		if (state /= "110") then
+		if (state /= "010") then
 			i_blink_enable <= '1';
 		else
 			i_blink_enable <= '0';
@@ -819,7 +819,7 @@ process (state, i_dis_count) begin
 			when "111" => i_bcd_single <= "1100"; --"d"
 			when others => i_bcd_single <= "0000";
 		end case;
-	elsif (state = "010") then
+	elsif (state = "110") then
 		case i_dis_count is
 			when "000" => i_bcd_single <= i_bcd_sp(3 downto 0); -- selects digit of BCD number
 			when "001" => i_bcd_single <= i_bcd_sp(7 downto 4);
@@ -831,7 +831,7 @@ process (state, i_dis_count) begin
 			when "111" => i_bcd_single <= "1101"; --"S"
 			when others => i_bcd_single <= "0000";
 		end case;
-	elsif (state = "110") then
+	elsif (state = "010") then
 		case i_dis_count is
 			when "000" => i_bcd_single <= i_bcd_angle(3 downto 0); -- selects digit of BCD number
 			when "001" => i_bcd_single <= i_bcd_angle(7 downto 4);

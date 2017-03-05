@@ -29,7 +29,7 @@ end component;
 
 signal clock 	: STD_LOGIC := '1';
 signal reset 	: STD_LOGIC := '1';
-signal duty 	: unsigned(7 downto 0) := (others => '0');
+signal duty 	: unsigned(11 downto 0) := (others => '0');
 signal pwm_tb	: STD_LOGIC := '0';
 
 begin
@@ -37,9 +37,9 @@ begin
 pwm_1: pwm
 	Generic Map(
 		clk_freq => 100000000, 		
-		pwm_freq => 20000,		
-		pwm_res => 8,			
-		count_res => 17	
+		pwm_freq => 24414,		
+		pwm_res => 12,			
+		count_res => 12	
 	)
 	Port Map(
 		clk => clock,
@@ -57,11 +57,13 @@ process begin
 	reset <= '1';
 	wait for 400 ns;
 	reset <= '0';
-	duty <= to_unsigned(128,8);
+	duty <= to_unsigned(2096,12);
 	wait for 2 ms;
-	duty <= to_unsigned(63,8);
+	duty <= to_unsigned(1024,12);
 	wait for 2 ms;
-	duty <= to_unsigned(191,8);
+	duty <= to_unsigned(3134,12);
+	wait for 2 ms;
+	duty <= to_unsigned(4095,12);
 	wait;
 end process;
 

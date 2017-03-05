@@ -74,13 +74,13 @@ process(clk, reset) begin
 			i_count0 <= (others => '0');
 			i_count1 <= (others => '0');
 			i_tick <= (others => '0');
-			i_pwm <= '1';
 			i_cnt_rst <= '0';
+		elsif (tick_period = 1) then
+			i_tick <= i_tick + 1;
 		elsif (i_count1=tick_period) then
 			i_tick <= i_tick + 1;
 			i_count1 <= (others => '0');
 		elsif (i_tick >= duty) then
-			i_pwm <= '0';
 			i_count1 <= i_count1 + 1;
 			i_count0 <= i_count0 + 1;
 		elsif (i_count0 = pwm_period) then
@@ -92,6 +92,6 @@ process(clk, reset) begin
 	end if;
 end process;
 
-pwm <= i_pwm;
+pwm <= '1' when (i_tick < duty) else '0';
 
 end Behavioral;
