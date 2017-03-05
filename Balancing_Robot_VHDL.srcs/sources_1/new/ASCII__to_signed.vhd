@@ -106,39 +106,39 @@ begin
         count_reset <= '0';
       end if;
     elsif (state = "10") then
-      if (count = "0001111010000100") then -- counts to middle of first ascii data bit
+      if (count = "0000010100010110") then -- counts to middle of first ascii data bit
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "0011001011011101") then --  counts to middle of second ascii data bit
+      elsif (count = "0000100001111010") then --  counts to middle of second ascii data bit
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "0100011100110101") then
+      elsif (count = "0000101111011110") then
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "0101101110001110") then
+      elsif (count = "0000111101000010") then
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "0110111111100111") then
+      elsif (count = "0001001010100110") then
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "1000010000111111") then
+      elsif (count = "0001011000001010") then
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "1001100010011000") then
+      elsif (count = "0001100101101110") then
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "1010110011110001") then
+      elsif (count = "0001110011010010") then
         next_state  <= "10";
         ce          <= '1';
         count_reset <= '0';
-      elsif (count = "1100000101001001") then
+      elsif (count = "0010000000110110") then
         next_state  <= "01";
         ce          <= '0';
         count_reset <= '0';
@@ -170,7 +170,7 @@ begin
   
   process(clk)begin --  converts ascii to BCD, when ascii is not 0-9 or carriage return, sends all 1's. When carriage return, activates load signal
     if rising_edge(clk) then
-      if (count = "1100000101001000" and state = "10") then
+      if (count = "0010000000110110" and state = "10") then
         if (ascii = "00110000") then
           bcd  <= "00000";
           shift <= '1';
