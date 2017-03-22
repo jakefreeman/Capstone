@@ -38,6 +38,9 @@ entity user_interface_top is
         btnC 		: in STD_LOGIC;
         btnCpuReset : in STD_LOGIC;
         SerIn 		: in STD_LOGIC;
+		SW0			: in STD_LOGIC;
+		RGB1_Red	: out STD_LOGIC;
+		RGB1_Green	: out STD_LOGIC;
 		dp 			: out STD_LOGIC;
         an 			: out STD_LOGIC_VECTOR (7 downto 0);
         seg 		: out STD_LOGIC_VECTOR (6 downto 0);
@@ -129,9 +132,9 @@ signal i_duty		: unsigned(11 downto 0) := (others => '0');
 signal i_pwm		: STD_LOGIC := '0';
 
 -- Start signal for process, take out later and make new component
-signal pwm_min			: integer := 964; 
-signal i_prev_PID_dir	: STD_LOGIC := '0';
-signal i_count 			: unsigned(19 downto 0); -- needs to count to 1 million, or 10 ms
+-- signal pwm_min			: integer := 803; 
+-- signal i_prev_PID_dir	: STD_LOGIC := '0';
+-- signal i_count 			: unsigned(19 downto 0); -- needs to count to 1 million, or 10 ms
 
 begin
 
@@ -189,52 +192,71 @@ ASCII_to_signed_1: ASCII_to_signed port map(
     load  => i_load
 );
 
-process (clk, i_reset, i_PID_dir, i_prev_PID_dir) begin
-	if rising_edge(clk) then
-		if (i_reset = '1') then
-			i_count <= (others => '0');
-			i_duty <= (others => '0');
-		elsif (i_PID_dir = not i_prev_PID_dir) then
-			i_duty <= "101000000011";
-			i_count <= (others => '0');
-		elsif (i_count < 1000000) then
-			i_duty <= "101000000011";
-			i_count <= i_count + 1;
-		else
-			if (i_PID_mag > 2097151-pwm_min*2**9) then
-				i_duty <= (others => '1');
-			elsif (i_PID_mag(20 downto 9) < 10) then
-				i_duty <= (others => '0');
-			else
-				i_duty <= i_PID_mag(20 downto 9) + pwm_min;
-			end if;
-			i_count <= "11110100001001000000";
-		end if;
-	end if;
-end process;
+--process (clk, i_reset, i_PID_dir, i_prev_PID_dir) begin
+--	if rising_edge(clk) then
+--		if (i_reset = '1') then
+--			i_count <= (others => '0');
+--			i_duty <= (others => '0');
+--		elsif (i_PID_dir = not i_prev_PID_dir) then
+--			i_duty <= "001101110011";
+--			i_count <= (others => '0');
+--		elsif (i_count < 1000000) then
+--			i_duty <= "001101110011";
+--			i_count <= i_count + 1;
+--		else
+--			if (i_PID_mag > 2097151-pwm_min*2**9) then
+--				i_duty <= (others => '1');
+--			elsif (i_PID_mag(20 downto 9) < 10) then
+--				i_duty <= (others => '0');
+--			else
+--				i_duty <= i_PID_mag(20 downto 9) + pwm_min;
+--			end if;
+--			i_count <= "11110100001001000000";
+--		end if;
+--	end if;
+--end process;
 
-process(clk) begin
-	if rising_edge(clk) then
-		i_prev_PID_dir <=i_PID_dir;
-		i_PID_dir <= i_PID_out(38);
-		i_PID_mag <= unsigned(i_PID_out(37 downto 0));
+--process(clk) begin
+--	if rising_edge(clk) then
+--		i_prev_PID_dir <=i_PID_dir;
+--		i_PID_dir <= i_PID_out(38);
+--		i_PID_mag <= unsigned(i_PID_out(37 downto 0));
+--	end if;
+--end process;
+		
+process (SW0) begin
+	if SW0 = '1' then -- Motors brake
+		pwm_out <= '1';
+		RGB1_Green <= '0';
+		RGB1_Red <= '1';
+			if i_PID_out(38) = '1' then
+				dir_1_out <= i_pwm;
+				dir_2_out <= '0';
+			else
+				dir_1_out <= '0';
+				dir_2_out <= i_pwm;
+			end if;
+	else -- Motors coast
+		RGB1_Green <= '1';
+		RGB1_Red <= '0';
+		pwm_out <= i_pwm; 
+		dir_1_out <= i_PID_dir;
+		dir_2_out <= not i_PID_dir;
 	end if;
 end process;
-		
-			
 	
 
 dp <= i_dp;
---i_PID_dir <= i_PID_out(38);
---i_PID_mag <= unsigned(i_PID_out(37 downto 0));
---i_duty <= (others => '1') when (i_PID_mag > 1048576) else unsigned(i_PID_mag(20 downto 9) + 290);
+i_PID_dir <= i_PID_out(38);
+i_PID_mag <= unsigned(i_PID_out(37 downto 0));
+i_duty <= (others => '1') when (i_PID_mag > 2097151) else unsigned(i_PID_mag(20 downto 9));
 -- pwm_out <= i_pwm;
 -- dir_1_out <= i_PID_dir;
 -- dir_2_out <= not i_PID_dir;
 
-pwm_out <= '1';
-dir_1_out <= i_pwm when (i_PID_out(38) = '1') else '0';
-dir_2_out <= i_pwm when (i_PID_out(38) = '0') else '0';
+-- pwm_out <= '1';
+-- dir_1_out <= i_pwm when (i_PID_out(38) = '1') else '0';
+-- dir_2_out <= i_pwm when (i_PID_out(38) = '0') else '0';
 
 LED(15 downto 4) <= STD_LOGIC_VECTOR(i_duty);
 LED(3) <= '0';

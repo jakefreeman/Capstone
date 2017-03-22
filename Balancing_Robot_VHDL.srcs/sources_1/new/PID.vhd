@@ -113,6 +113,7 @@ port map(
 	RST=>reset			--1-bit input active high reset
 );
 
+--------------- Velocity Form of PID ------------------
 ---- Load when d_ready is high
 -- process(clk, rst, d_ready) begin
 	-- if rising_edge(clk) then
@@ -142,6 +143,7 @@ port map(
 	-- end if;
 -- end process;
 
+------------- Position form of PID ----------------
 process(clk, rst, d_ready) begin
 	if rising_edge(clk) then
 		if (rst = '1') then
@@ -160,7 +162,7 @@ process(clk, rst, d_ready) begin
 				error 		<= (set - d_in);
 				error_int 	<= error_int + (set - d_in);
 				proportional<= SHIFT_RIGHT((set - d_in),2);	
-				derivative <= SHIFT_RIGHT(input - prev_input,2);
+				derivative <= SHIFT_LEFT(input - prev_input,2);
 			else 
 				input 		<= input; 	
 				prev_input 	<= prev_input; 
@@ -175,8 +177,10 @@ process(clk, rst, d_ready) begin
 end process;
 
 
-process (pTerm, iTerm, dTerm, rst) begin
+process (pTerm, iTerm, dTerm, set, d_in, rst) begin
 		if (rst = '1') then
+			output <= (others => '0');
+		elsif ((d_in - set) = "00000000000000000") then
 			output <= (others => '0');
 		else
 			output <= signed(pTerm) + signed(iTerm) - signed(dTerm);
@@ -188,7 +192,7 @@ end process;
 --derivative <= input-SHIFT_LEFT(prev_input,1)+prev_input2;
 --derivative <= SHIFT_RIGHT(input - prev_input,4);
 --output <= prev_output + signed(pTerm) + signed(iTerm) - signed(dTerm);
-d_out <= output when output(38) = '0' else output(38) & not output(37 downto 0);
+d_out <= output when output(38) = '0' else output(38) & ((not output(37 downto 0)) - 1); 
 --d_out <= output;
 reset <= rst;
 end Behavioral;

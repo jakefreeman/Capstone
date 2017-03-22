@@ -62,7 +62,9 @@ signal i_load0		: STD_LOGIC;
 signal i_load1		: STD_LOGIC;
 signal i_load2		: STD_LOGIC;
 signal i_load3		: STD_LOGIC;
+signal i_load4		: STD_LOGIC;
 
+signal ones 		: signed(17 downto 0) := (others => '0');
 signal tens			: signed(17 downto 0) := (others => '0');
 signal hundreds		: signed(17 downto 0) := (others => '0');
 signal thousands	: signed(17 downto 0) := (others => '0');
@@ -215,7 +217,8 @@ begin
   end process;
   
   process(clk, reset, i_load3) begin
-	if (reset = '1' or i_load3 = '1') then
+	if (reset = '1' or i_load4 = '1') then
+		bcd_reg0 <= (others => '0');
 		bcd_reg1 <= (others => '0');
 		bcd_reg2 <= (others => '0');
 		bcd_reg3 <= (others => '0');
@@ -225,29 +228,34 @@ begin
 			bcd_reg4 <= bcd_reg3;
 			bcd_reg3 <= bcd_reg2;
 			bcd_reg2 <= bcd_reg1;
-			bcd_reg1 <= bcd;
+			bcd_reg1 <= bcd_reg0;
+			bcd_reg0 <= bcd;
 		else
 			bcd_reg4 <= bcd_reg4;
 			bcd_reg3 <= bcd_reg3;
 			bcd_reg2 <= bcd_reg2;
 			bcd_reg1 <= bcd_reg1;
+			bcd_reg0 <= bcd_reg0;
 		end if;
 	end if;
   end process;
   
   process(clk, reset) begin
 	if (reset = '1') then
+		ones 	  <= (others => '0');
 		tens      <= (others => '0');
 		hundreds  <= (others => '0');
 		thousands <= (others => '0');
 		ten_thousands <= (others=> '0');
 	elsif rising_edge(clk) then
 		if (i_load = '1') then
+			ones <= resize(bcd_reg0,18);
 			tens <= resize(bcd_reg1*"01010",18);
 			hundreds <= resize(bcd_reg2*"01100100",18);
 			thousands <= resize(bcd_reg3*"01111101000",18);
 			ten_thousands <= resize(bcd_reg4*"010011100010000",18);
 		else 
+			ones <= ones;
 			tens <= tens;
 			hundreds <= hundreds;
 			thousands <= thousands;
@@ -261,8 +269,10 @@ begin
 		i_load0 <= '0';
 		i_load1 <= '0';
 		i_load2 <= '0';
-		i_load3 <= '0';		
+		i_load3 <= '0';
+		i_load4 <= '0';
 	elsif rising_edge(clk) then
+		i_load4 <= i_load3;
 		i_load3 <= i_load2;
 		i_load2 <= i_load1;
 		i_load1 <= i_load0;
@@ -274,8 +284,8 @@ begin
 	if (reset = '1') then
 		i_value <= (others => '0');
 	elsif rising_edge(clk) then
-		if (i_load3 = '1') then
-			i_value <= (tens)+(hundreds)+(thousands)+(ten_thousands);
+		if (i_load4 = '1') then
+			i_value <= (ones)+(tens)+(hundreds)+(thousands)+(ten_thousands);
 		else
 			i_value <= i_value;
 		end if;
@@ -283,8 +293,7 @@ begin
   end process;
    
   
-  bcd_reg0 <= (others => '0');
-  load <= i_load3;
+  load <= i_load4;
   dout <= i_value;
   
 end Behavioral;
