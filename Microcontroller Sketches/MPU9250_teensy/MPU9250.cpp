@@ -467,12 +467,12 @@ void MPU9250::calibrateMPU9250(float * gyroBias, float * accelBias)
   // Apparently this is not working for the acceleration biases in the MPU-9250
   // Are we handling the temperature correction bit properly?
   // Push accelerometer biases to hardware registers
-  writeByte(MPU9250_ADDRESS, XA_OFFSET_H, data[0]);
-  writeByte(MPU9250_ADDRESS, XA_OFFSET_L, data[1]);
-  writeByte(MPU9250_ADDRESS, YA_OFFSET_H, data[2]);
-  writeByte(MPU9250_ADDRESS, YA_OFFSET_L, data[3]);
-  writeByte(MPU9250_ADDRESS, ZA_OFFSET_H, data[4]);
-  writeByte(MPU9250_ADDRESS, ZA_OFFSET_L, data[5]);
+//  writeByte(MPU9250_ADDRESS, XA_OFFSET_H, data[0]);
+//  writeByte(MPU9250_ADDRESS, XA_OFFSET_L, data[1]);
+//  writeByte(MPU9250_ADDRESS, YA_OFFSET_H, data[2]);
+//  writeByte(MPU9250_ADDRESS, YA_OFFSET_L, data[3]);
+//  writeByte(MPU9250_ADDRESS, ZA_OFFSET_H, data[4]);
+//  writeByte(MPU9250_ADDRESS, ZA_OFFSET_L, data[5]);
 
   // Output scaled accelerometer biases for display in the main program
   accelBias[0] = (float)accel_bias[0]/(float)accelsensitivity;

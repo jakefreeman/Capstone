@@ -28,15 +28,19 @@ use IEEE.STD_LOGIC_1164.ALL;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
+Library UNISIM;
+use UNISIM.vcomponents.all;
+library UNIMACRO;
+use unimacro.Vcomponents.all;
 
 
 entity ultrasonic is
 	Port(
-		rst					: in STD_LOGIC; --reset
-		clk 				: in STD_LOGIC; --100 MHz clock
+		rst			: in STD_LOGIC; --reset
+		clk 		: in STD_LOGIC; --100 MHz clock
 		sensor_in 	: in STD_LOGIC; --sensor signal, high time proportional to distance
 		trigger_out : out STD_LOGIC; --10us pulse to trigger reading from sensor
-		distance 		: out unsigned(8 downto 0)
+		distance 	: out unsigned(8 downto 0)
 	);
 end ultrasonic;
 
@@ -47,15 +51,35 @@ signal i_count : unsigned(23 downto 0) := (others => '0'); --counts to 60ms, or 
 --10us : x"00 03E8"
 --60ms : x"‭5B 8D80‬"
 signal i_trigger_out 	: STD_LOGIC := '0'; --internal trigger signal
-signal i_edge0 				: STD_LOGIC := '0'; --edge detector
-signal i_edge1 				: STD_LOGIC := '0'; --edge detector
+signal i_edge0 			: STD_LOGIC := '0'; --edge detector
+signal i_edge1 			: STD_LOGIC := '0'; --edge detector
 signal i_edge_enable	: STD_LOGIC := '0'; --edge detect enable
-signal i_rise	 				: unsigned(23 downto 0) := x"FFFFFF"; --count when echo return signal goes high
-signal i_time  				: unsigned(23 downto 0) := x"000000"; --time returned signal is high in clock cycles
-signal i_distance 		: unsigned(47 downto 0);
+signal i_rise	 		: unsigned(23 downto 0) := x"FFFFFF"; --count when echo return signal goes high
+signal i_time  			: unsigned(23 downto 0) := x"000000"; --time returned signal is high in clock cycles
+signal i_time2 			: STD_LOGIC_VECTOR(39 downto 0) := (others => '0'); --time returned signal is high in clock cycles
+--signal i_time3 			: STD_LOGIC_VECTOR(39 downto 0) := (others => '0'); --time returned signal is high in clock cycles
+signal i_distance 		: unsigned(39 downto 0);
 signal i_read_flag 		: STD_LOGIC := '0';
 
+constant CE 		: STD_LOGIC := '1';
+constant multiplier : STD_LOGIC_VECTOR(15 downto 0) := (x"5921"); --22817
+
 begin
+
+MULT_MACRO_inst1:MULT_MACRO -- DSP48 DSP block multipliers.
+generic map(
+	DEVICE=>"7SERIES",	--TargetDevice:"VIRTEX5","7SERIES","SPARTAN6"
+	LATENCY=>1, 		--Desired clock cycle latency, 0-4
+	WIDTH_A=>24, 		--Multiplier A-input bus width,1-25
+	WIDTH_B=>16) 		--Multiplier B-input bus width,1-18
+port map(
+	P=>i_time2,--Multiplier ouput bus, width determined by WIDTH_P generic
+	A=>STD_LOGIC_VECTOR(i_time),--Multiplier inputA bus,width determined by WIDTH_A generic
+	B=>multiplier,		--Multiplier inputB bus, width determined by WIDTH_B generic
+	CE=>CE,				--1-bit active high input clock enable
+	CLK=>clk,			--1-bit positive edge clock input
+	RST=>rst			--1-bit input active high reset
+);
 
 counter: process(clk,rst) begin
 	if rising_edge(clk) then
@@ -111,10 +135,20 @@ get_distance: process(clk,rst) begin
 	end if;
 end process;
 
--- process(i_time) begin
-	-- if (i_time < 
+process(clk, rst) begin
+	if rising_edge(clk) then
+		if (rst = '1') then
+			i_distance <= (others => '0');
+			--i_time3 <= (others => '0');
+		else
+			--i_time3 <= unsigned(i_time2)/x"5F5E100";
+			i_distance <= shift_right(unsigned(i_time2), 27);
+		end if;
+	end if;
+end process;
+
 	
-i_distance <= (i_time*x"004268")/x"5F5E100";
+--i_distance <= (i_time*x"004268")/x"5F5E100";
 distance <= i_distance(8 downto 0);
 trigger_out <= i_trigger_out;
 			

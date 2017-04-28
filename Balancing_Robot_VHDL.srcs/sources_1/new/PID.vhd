@@ -64,7 +64,8 @@ signal dTerm		: STD_LOGIC_VECTOR(38 downto 0) := (others => '0');
 
 constant CE 		: STD_LOGIC := '1';
 
-signal error_int	: signed(17 downto 0) := (others => '0');
+signal temp_error_int	: signed (18 downto 0) := (others => '0');
+signal error_int		: signed(17 downto 0) := (others => '0');
 
 begin
 
@@ -160,7 +161,14 @@ process(clk, rst, d_ready) begin
 				prev_input 	<= input;
 				prev_error 	<= error;
 				error 		<= (set - d_in);
-				error_int 	<= error_int + (set - d_in);
+				temp_error_int 	<= resize(error_int,19) + resize((set - d_in),19);
+				if (temp_error_int > 131070) then
+					error_int <= "011111111111111111";
+				elsif (temp_error_int < -131070) then
+					error_int <= "100000000000000000";
+				else
+					error_int <= temp_error_int(17 downto 0);
+				end if;
 				proportional<= SHIFT_RIGHT((set - d_in),2);	
 				derivative <= SHIFT_LEFT(input - prev_input,2);
 			else 
@@ -177,14 +185,18 @@ process(clk, rst, d_ready) begin
 end process;
 
 
-process (pTerm, iTerm, dTerm, set, d_in, rst) begin
+process (clk, pTerm, iTerm, dTerm, set, d_in, rst, error) begin
+	if (rising_edge(clk)) then
 		if (rst = '1') then
 			output <= (others => '0');
 		elsif ((d_in - set) = "00000000000000000") then
 			output <= (others => '0');
+		elsif ((error > 4500) or (error < -4500)) then
+			output <= (others => '0');
 		else
 			output <= signed(pTerm) + signed(iTerm) - signed(dTerm);
 		end if;
+	end if;
 end process;
 
 
@@ -192,7 +204,8 @@ end process;
 --derivative <= input-SHIFT_LEFT(prev_input,1)+prev_input2;
 --derivative <= SHIFT_RIGHT(input - prev_input,4);
 --output <= prev_output + signed(pTerm) + signed(iTerm) - signed(dTerm);
-d_out <= output when output(38) = '0' else output(38) & ((not output(37 downto 0)) - 1); 
+--d_out <= output when output(38) = '0' else output(38) & ((not output(37 downto 0)) - 1); 
+d_out <= output; 
 --d_out <= output;
 reset <= rst;
 end Behavioral;

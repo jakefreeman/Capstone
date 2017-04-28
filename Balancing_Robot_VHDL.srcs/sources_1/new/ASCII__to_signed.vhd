@@ -149,7 +149,7 @@ begin
         ce          <= '0';
         count_reset <= '0';
       end if;
-	 else
+	else
 		next_state 	<= "01";
 		ce 			<= '0';
 		count_reset <= '0';

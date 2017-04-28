@@ -30,13 +30,21 @@
 
 #define AHRS true         // Set to false for basic data read
 #define SerialDebug true  // Set to true to get Serial output for debugging
-
+#define pi 3.141592645
 
 // Pin definitions
 int intPin = 12;  // These can be changed, 2 and 3 are the Arduinos ext int pins
 int myLed  = 13;  // Set up pin 13 led for toggling
 int count = 0;
-float outputOffset=0.0; // calculated offset from average calibration data
+float XAccOffset=0.0; // calculated offset from average calibration data
+float YAccOffset=0.0; // calculated offset from average calibration data
+float ZAccOffset=0.0; // calculated offset from average calibration data
+
+float XOffset = -0.05445861;
+float YOffset = -0.003;
+float ZOffset = 0.001513894;
+float temp_mag;
+float rest_angle;
 
 MPU9250 myIMU;
 
@@ -82,6 +90,7 @@ void setup()
     Serial.print("z-axis self test: gyration trim within : ");
     Serial.print(myIMU.selfTest[5],1); Serial.println("% of factory value");
 
+    
     // Calibrate gyro and accelerometers, load biases in bias registers
     myIMU.calibrateMPU9250(myIMU.gyroBias, myIMU.accelBias);
 
@@ -89,6 +98,14 @@ void setup()
     // Initialize device for active mode read of acclerometer, gyroscope, and
     // temperature
     Serial.println("MPU9250 initialized for active data mode....");
+    
+    Serial.print("Accel bias x = ");
+    Serial.println(myIMU.accelBias[0]);
+    Serial.print("Accel bias y = ");
+    Serial.println(myIMU.accelBias[1]);
+    Serial.print("Accel bias z = ");
+    Serial.println(myIMU.accelBias[2]);
+
 
     // Read the WHO_AM_I register of the magnetometer, this is a good test of
     // communication
@@ -121,43 +138,45 @@ void setup()
 
     delay(2000); // Add delay to see results before serial spew of data
 
+    // Get average output data over x samples
+    int x = 2000;
+    int y = 0;
+    int divider = 0;
+    
+    for (int i=0; i<2000; i++){ 
+
+    myIMU.readAccelData(myIMU.accelCount);  // Read the x/y/z adc values
+    
+        if(i>1000){
+          Serial.print((float)myIMU.accelCount[0] * myIMU.aRes, 8);
+          Serial.print(", ");
+          Serial.print((float)myIMU.accelCount[1] * myIMU.aRes, 8);
+          Serial.print(", ");
+          Serial.println((float)myIMU.accelCount[2] * myIMU.aRes, 8);
+          XAccOffset += (float)myIMU.accelCount[0] * myIMU.aRes; // - myIMU.accelBias[0];
+          YAccOffset += (float)myIMU.accelCount[1] * myIMU.aRes; // - myIMU.accelBias[1];
+          ZAccOffset += (float)myIMU.accelCount[2] * myIMU.aRes; // - myIMU.accelBias[2];
+          divider++;
+        }
+      } // for loop 
+
+    XAccOffset=XAccOffset/divider;
+    YAccOffset=YAccOffset/divider;
+    ZAccOffset=ZAccOffset/divider;
+    temp_mag=sqrt(sq(XAccOffset)+sq(YAccOffset)+sq(ZAccOffset));
+    XAccOffset=XAccOffset/temp_mag + XOffset;
+    YAccOffset=YAccOffset/temp_mag + YOffset;
+    ZAccOffset=ZAccOffset/temp_mag + ZOffset;
+    Serial.print("X Accel Output rest value ");
+    Serial.println(XAccOffset,8);
+    Serial.print("Y Accel Output rest value ");
+    Serial.println(YAccOffset,8);
+    Serial.print("Z Accel Output rest value ");
+    Serial.println(ZAccOffset,8);
+    Serial.print("Rest angle is ");
+    Serial.println(atan(ZAccOffset/YAccOffset)*(180/pi));
+    delay(2000);
     flashLED(5,2);
-
-//    // Get average output data over x samples
-//    int x = 200;
-//    int y = 0;
-//    int divider = 0;
-//    
-//    for (int i=0; i<x; y++){ 
-
-
-//    myIMU.readAccelData(myIMU.accelCount);  // Read the x/y/z adc values
-//
-//    myIMU.ax = (float)myIMU.accelCount[0] * myIMU.aRes; // - myIMU.accelBias[0];
-//    myIMU.ay = (float)myIMU.accelCount[1] * myIMU.aRes; // - myIMU.accelBias[1];
-//    myIMU.az = (float)myIMU.accelCount[2] * myIMU.aRes; // - myIMU.accelBias[2];
-//
-//    myIMU.readGyroData(myIMU.gyroCount);  // Read the x/y/z adc values
-//
-//    myIMU.gx = (float)myIMU.gyroCount[0] * myIMU.gRes;
-//    myIMU.gy = (float)myIMU.gyroCount[1] * myIMU.gRes;
-//    myIMU.gz = (float)myIMU.gyroCount[2] * myIMU.gRes;
-
-//        Serial.println(myIMU.roll, 2);
-//        i++;
-//        if(i>20){
-//          Serial.println(i);
-//          outputOffset += myIMU.roll;
-//          divider++;
-//        }
-//      }
-//    } // for loop 
-
-//    outputOffset=outputOffset/divider;
-//    Serial.print("Output offeset by ");
-//    Serial.print(outputOffset);
-//    Serial.println(" degrees.");
-//    delay(2000);
 
 
   } // if (c == 0x71)
@@ -167,6 +186,7 @@ void setup()
     Serial.println(c, HEX);
     while(1) ; // Loop forever if communication doesn't happen
   }
+  
 }
 
 void loop()
@@ -181,8 +201,8 @@ void loop()
     // Now we'll calculate the accleration value into actual g's
     // This depends on scale being set
 //    myIMU.ax = (float)myIMU.accelCount[0] * myIMU.aRes; // - myIMU.accelBias[0];
-    myIMU.ay = (float)myIMU.accelCount[1] * myIMU.aRes; // - myIMU.accelBias[1];
-    myIMU.az = (float)myIMU.accelCount[2] * myIMU.aRes; // - myIMU.accelBias[2];
+    myIMU.ay = (float)myIMU.accelCount[1] * myIMU.aRes - YOffset;
+    myIMU.az = (float)myIMU.accelCount[2] * myIMU.aRes - ZOffset;
 
     myIMU.readGyroData(myIMU.gyroCount);  // Read the x/y/z adc values
 

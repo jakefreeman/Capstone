@@ -13,6 +13,7 @@
 #include "complimentaryFilter.h"
 
 static float pitch;
+static bool first = 0;
 //FilterOnePole highPassFilter( HIGHPASS, 0.05);
 //FilterOnePole lowPassFilter( LOWPASS, 10);
 
@@ -26,7 +27,13 @@ void ComplimentaryFilterUpdate(float ay, float az, float gx){
   
   // Set integration time by time elapsed since last filter update
   // Integrate the gyroscope data -> int(angularSpeed) = angle
+  if(first) {
     pitch += (gx * dt); // Angle around the X-axis
+  }
+  else {
+    pitch = atan(ay/az)*180/M_PI;
+    first = 1;
+  }
     
     // Compensate for drift with accelerometer data if !bullshit
     // Sensitivity = -2 to 2 G at 16Bit -> 2G = 32768 && 0.5G = 8192
